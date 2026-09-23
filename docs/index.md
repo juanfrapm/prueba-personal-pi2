@@ -1,88 +1,77 @@
-# TODO: nombre del proyecto
+﻿# NexoCampo
 
-!!! note "Cómo se usa esta página"
-    Es la portada del sitio y lo primero que ve quien corrige. Tiene que
-    responder, en menos de un minuto de lectura: qué problema resuelven, para
-    quién, y quiénes son. Borrá los bloques como este a medida que completes.
+**Proyecto de prueba de monitoreo ambiental con placas ESP32 y módulos LoRa.**
+
+NexoCampo propone conectar puntos de medición de una huerta o un invernadero con una estación receptora. El objetivo es experimentar con el envío de lecturas de temperatura y humedad desde lugares sin cobertura Wi-Fi y reunirlas en un panel de consulta.
+
+!!! note "Propuesta de prueba"
+    Esta página describe el sistema que se propone desarrollar. La integración LoRa, los sensores y las mediciones de alcance están pendientes de implementar y validar.
 
 ## El problema
 
-TODO: dos o tres párrafos. Qué situación concreta existe hoy, a quién le pasa,
-y por qué es un problema que valga la pena resolver. Sin hablar todavía de la
-solución ni de la tecnología.
-
-> Ejemplo del tono esperado (de un proyecto de otro semestre):
->
-> *En la sala de servidores del edificio no hay medición de temperatura. El
-> aire acondicionado falló dos veces en el último año y en ambos casos el
-> problema se descubrió recién cuando un equipo se apagó por sobrecalentamiento,
-> varias horas después. No hay registro histórico, así que tampoco se puede
-> saber si el equipo de refrigeración está trabajando al límite antes de que
-> falle.*
+En el escenario propuesto, los puntos de medición están separados y revisar cada sensor presencialmente lleva tiempo. Llevar conectividad Wi-Fi a todos esos puntos puede resultar poco práctico. Se busca transportar lecturas pequeñas y periódicas hacia un único punto de consulta.
 
 ## Nuestra solución
 
-TODO: un párrafo. Qué construyeron y cómo ataca el problema de arriba.
+La prueba utilizará dos placas ESP32, cada una conectada a un módulo LoRa compatible. Una funcionará como nodo de medición y la otra como estación receptora. Primero se enviarán datos de prueba; después se incorporarán sensores reales y se evaluará la publicación en ThingsBoard mediante Wi-Fi.
 
-TODO: una foto del prototipo armado.
+1. El nodo ESP32 obtiene una lectura y prepara un mensaje con su identificador.
+2. El módulo LoRa transmite el mensaje a la estación receptora.
+3. La segunda ESP32 procesa el mensaje recibido.
+4. La estación publica los datos en ThingsBoard mediante MQTT cuando dispone de Wi-Fi e internet.
 
-!!! warning "Antes de subir una imagen"
-    Comprimila. El límite del repositorio es 300 KB por archivo, y el job
-    `higiene` de la integración continua falla si te pasás. Una foto de celular
-    sin comprimir pesa entre 3 y 8 MB. Con exportarla a 1200 px de ancho y
-    calidad 80 alcanza y sobra.
+## Las tecnologías
 
-## El equipo
+### ESP32: lectura y procesamiento
 
-| Integrante | Rol / de qué se ocupó |
+El ESP32 es un microcontrolador de Espressif. El ESP32 clásico dispone de Wi-Fi de 2,4 GHz, Bluetooth e interfaces como GPIO, I2C, SPI y UART para conectar periféricos. En NexoCampo se propone utilizarlo para leer sensores, preparar mensajes y gestionar la comunicación de la estación con el panel.
+
+**El ESP32 por sí solo no incorpora radio LoRa.** Se necesita un módulo externo o una placa que integre ambos componentes. La conexión y los pines se definirán según el módulo elegido.
+
+Referencia: [documentación oficial del ESP32, de Espressif](https://documentation.espressif.com/esp32_datasheet_en.html).
+
+### LoRa: comunicación entre nodos
+
+LoRa es una tecnología de modulación de radio orientada a comunicaciones de largo alcance y bajo consumo. Es adecuada para transmitir mensajes pequeños, como lecturas de sensores. El alcance y el consumo reales deberán medirse en el prototipo: dependen de las antenas, el entorno y la configuración del enlace.
+
+**LoRa y LoRaWAN no son lo mismo.** LoRa proporciona el enlace de radio; LoRaWAN define un protocolo de red que utiliza esa tecnología. La primera prueba de NexoCampo propone un enlace LoRa punto a punto entre dos módulos, sin una red LoRaWAN.
+
+Referencia: [introducción oficial a LoRa, de Semtech](https://www.semtech.com/lora/what-is-lora).
+
+## Componentes propuestos
+
+| Componente | Función en la prueba |
 |---|---|
-| TODO: Nombre Apellido | TODO: firmware, sensores |
-| TODO: Nombre Apellido | TODO: ThingsBoard, dashboard |
-| TODO: Nombre Apellido | TODO: documentación, pruebas |
+| Dos placas de desarrollo ESP32 | Ejecutar el programa del nodo y de la estación receptora |
+| Dos módulos LoRa compatibles entre sí | Transmitir y recibir las lecturas |
+| Antenas adecuadas para los módulos | Establecer el enlace de radio |
+| Sensor de temperatura y humedad, por seleccionar | Obtener mediciones ambientales reales |
+| Alimentación adecuada para cada placa y módulo | Sostener el funcionamiento del prototipo |
+| ThingsBoard | Visualizar la telemetría cuando se complete la integración |
 
-## Estado actual
+Antes del montaje se definirán el modelo de radio, la banda permitida para el lugar de uso, las antenas, la alimentación y los niveles lógicos compatibles.
 
-TODO: una lista corta de qué funciona hoy y qué falta. Actualizala en cada
-entrega; es lo que permite ver el avance sin leer todo el sitio.
+## Estado y próximas pruebas
 
-- [x] TODO: ejemplo de algo terminado
-- [ ] TODO: ejemplo de algo pendiente
+- [x] Definir el nombre y el escenario de prueba del proyecto.
+- [x] Describir la función de ESP32 y LoRa en la propuesta.
+- [ ] Seleccionar placas, módulos, sensores y conexiones.
+- [ ] Implementar el envío y la recepción de mensajes de prueba por LoRa.
+- [ ] Incorporar lecturas reales de temperatura y humedad.
+- [ ] Medir mensajes recibidos y perdidos a distintas distancias.
+- [ ] Evaluar el consumo y la recuperación ante interrupciones del enlace.
+- [ ] Integrar la recepción con ThingsBoard y documentar los resultados.
 
-## Dashboard en vivo
+## Equipo y panel
 
-<!--
-  CÓMO EMBEBER EL DASHBOARD DE THINGSBOARD
+Los integrantes y sus responsabilidades están pendientes de completar. El enlace al panel se agregará cuando esté configurado y se hayan verificado las primeras lecturas.
 
-  1. En ThingsBoard, abrí tu dashboard.
-  2. Entrá al menú de los tres puntos (arriba a la derecha) y elegí
-     "Compartir dashboard" / "Make dashboard public".
-  3. Copiá la URL pública que te da.
-  4. Descomentá el bloque de abajo y pegá esa URL en el atributo src.
-
-  Ojo con dos cosas:
-    - La URL pública deja el dashboard accesible para cualquiera que la tenga.
-      No pongas datos sensibles ahí.
-    - Si tu instancia de ThingsBoard usa http:// y el sitio de GitHub Pages es
-      https://, el navegador puede bloquear el iframe por contenido mixto. En
-      ese caso el iframe aparece vacío: no es un error de tu HTML.
-
-<iframe
-  src="TODO-PEGAR-URL-PUBLICA-DEL-DASHBOARD"
-  width="100%"
-  height="600"
-  style="border: 1px solid #ccc; border-radius: 4px;"
-  title="Dashboard de telemetría en ThingsBoard">
-</iframe>
--->
-
-TODO: descomentá el bloque de arriba cuando tengas el dashboard público.
-
-## Cómo está organizado este sitio
+## Documentación del proyecto
 
 | Sección | Qué vas a encontrar |
 |---|---|
-| [Plan](plan.md) | El cronograma y el seguimiento sprint por sprint |
-| [Arquitectura](arquitectura.md) | Cómo está armado el sistema y el contrato de datos |
-| [Decisiones](decisiones.md) | Por qué está armado así y qué alternativas se descartaron |
-| [Pruebas](pruebas.md) | Qué se probó y con qué evidencia |
-| [Bitácora](bitacora/index.md) | El registro del proceso, clase por clase |
+| [Plan](plan.md) | Cronograma y seguimiento de tareas |
+| [Arquitectura](arquitectura.md) | Componentes, conexiones y formato de los datos |
+| [Decisiones](decisiones.md) | Elecciones técnicas y alternativas consideradas |
+| [Pruebas](pruebas.md) | Procedimientos, resultados y evidencias |
+| [Bitácora](bitacora/index.md) | Registro del trabajo y los avances |

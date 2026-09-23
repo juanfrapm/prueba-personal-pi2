@@ -10,7 +10,7 @@
 
 # CAMBIAR (1 de 2): el nombre del proyecto, que aparece arriba a la izquierda
 # en todas las páginas y en la pestaña del navegador.
-site_name: "Proyecto Integrador 2 — TODO nombre del proyecto"
+site_name: "NexoCampo — ESP32 y LoRa"
 
 # CAMBIAR (2 de 2): la URL pública del sitio, con la barra final.
 # Se arma así:  https://<organización o usuario>.github.io/<repositorio>/
@@ -18,7 +18,7 @@ site_name: "Proyecto Integrador 2 — TODO nombre del proyecto"
 site_url: https://TODO-ORGANIZACION.github.io/TODO-REPOSITORIO/
 
 # Opcional: descripción corta, la usan los buscadores.
-site_description: Documentación del proyecto de IoT
+site_description: Proyecto de prueba de monitoreo ambiental con placas ESP32 y módulos LoRa.
 
 theme:
   name: material
