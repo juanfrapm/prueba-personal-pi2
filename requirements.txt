@@ -1,0 +1,13 @@
+# Dependencias del sitio de documentación.
+#
+# Instalar con:  pip install -r requirements.txt
+# Previsualizar: mkdocs serve       (queda en http://127.0.0.1:8000)
+#
+# La versión está fijada por rango menor (~=), igual que las librerías de
+# firmware en platformio.ini: acepta correcciones (9.7.7 -> 9.7.9) pero no un
+# cambio mayor que rompa el sitio. Así el sitio se construye igual en tu
+# máquina, en la de tus compañeros y en la integración continua.
+#
+# mkdocs-material arrastra mkdocs y las extensiones de pymdownx, así que no
+# hace falta listarlos aparte.
+mkdocs-material~=9.7.7

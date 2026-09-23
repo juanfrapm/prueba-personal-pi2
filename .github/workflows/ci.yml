@@ -1,0 +1,152 @@
+# =============================================================================
+# Integración continua.
+#
+# Corre en cada push y en cada pull request, sobre cualquier rama. Son tres
+# jobs independientes que corren EN PARALELO: si falla uno, los otros terminan
+# igual, así ves todos los problemas de una vez y no de a uno por push.
+#
+# NO necesita ningún secreto de repositorio. El script de inyección de
+# secretos crea secrets.ini a partir de secrets.ini.example cuando no existe,
+# y esos valores de ejemplo alcanzan para compilar. Lo que no se puede hacer
+# en CI es conectarse de verdad al WiFi ni a ThingsBoard, y no hace falta:
+# acá se verifica que el código compile y que la lógica sea correcta.
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Si pusheás dos veces seguidas, cancela la corrida vieja: no tiene sentido
+# gastar minutos en verificar un commit que ya quedó atrás.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# -----------------------------------------------------------------------------
+# POR QUÉ ACÁ LAS VERSIONES SE FIJAN DISTINTO QUE EN platformio.ini
+#
+# En platformio.ini la plataforma de ESP32 va con el tag EXACTO (55.03.311).
+# Acá las acciones van con el tag MAYOR (@v7). No es una inconsistencia: es el
+# mismo criterio aplicado a dos cosas distintas.
+#
+#   - El compilador ES PARTE DEL ARTEFACTO. La plataforma de ESP32 produce el
+#     .bin que corre en la placa: si cambia, cambia el binario, y cambia en
+#     silencio. Eso se fija exacto.
+#
+#   - Las acciones de GitHub SON INFRAESTRUCTURA DE CI, no parte del artefacto.
+#     checkout copia archivos, cache guarda una carpeta; nada de eso entra en
+#     el firmware ni en el sitio. Sus autores respetan versionado semántico,
+#     así que dentro de @v7 no hay cambios que rompan, y sí llegan las
+#     correcciones de seguridad. Si algo se rompiera, se ve al instante y en
+#     rojo acá, sin haber contaminado ningún binario.
+#
+# Regla corta: fijar exacto lo que puede cambiar el resultado sin avisar; dejar
+# que se actualice lo que, si se rompe, lo dice en la cara.
+#
+# Quien quiera el máximo rigor puede fijar el hash de commit de cada acción, a
+# cambio de tener que actualizarlas a mano.
+# -----------------------------------------------------------------------------
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Compilar el firmware para las dos placas soportadas.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Compilar firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v7
+
+      - name: Preparar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      # Los toolchains de ESP32 y ESP8266 pesan varios GB y tardan más en
+      # bajarse que lo que tarda la compilación. El caché los guarda entre
+      # corridas. La clave incluye el hash de platformio.ini: si cambiás una
+      # versión de plataforma o de librería, el caché se invalida solo.
+      - name: Cachear PlatformIO y pip
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+          restore-keys: |
+            pio-${{ runner.os }}-
+
+      - name: Instalar PlatformIO
+        run: pip install platformio
+
+      - name: Compilar para ESP32 (placa por defecto del curso)
+        run: pio run -e esp32dev
+
+      - name: Compilar para ESP8266
+        run: pio run -e nodemcuv2
+
+  # ---------------------------------------------------------------------------
+  # Correr los tests de la lógica de control en la máquina de CI, sin placa.
+  #
+  # Este job es el que hace que tener el compilador instalado localmente sea
+  # opcional: acá los tests corren siempre, en cada push.
+  # ---------------------------------------------------------------------------
+  test:
+    name: Tests de la lógica
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v7
+
+      - name: Preparar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Cachear PlatformIO y pip
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: pio-native-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+          restore-keys: |
+            pio-native-${{ runner.os }}-
+
+      - name: Instalar PlatformIO
+        run: pip install platformio
+
+      # El compilador de C++ ya viene instalado en los runners de Ubuntu, así
+      # que acá no hay que hacer nada. Es lo que en tu máquina sería
+      # build-essential (Linux), las Command Line Tools (macOS) o MSYS2
+      # (Windows).
+      - name: Correr los tests
+        run: pio test -e native
+
+  # ---------------------------------------------------------------------------
+  # Higiene del repositorio: que no entren archivos pesados.
+  #
+  # No es cosmético. Un repositorio de equipo de 2024 llegó a 12 MB con las
+  # mismas tres fotos guardadas dos veces, una de ellas como PNG de 3 MB.
+  # ---------------------------------------------------------------------------
+  higiene:
+    name: Higiene del repositorio
+    runs-on: ubuntu-latest
+
+    steps:
+      # fetch-depth: 0 trae el historial completo. Es necesario: el chequeo
+      # mide el tamaño real de los objetos de git, que es lo que se baja cada
+      # persona al clonar. Con el checkout superficial que viene por defecto,
+      # esa medición no significaría nada.
+      - name: Traer el código con historial completo
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verificar tamaños
+        run: bash scripts/higiene.sh

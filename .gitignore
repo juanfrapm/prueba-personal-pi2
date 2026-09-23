@@ -1,0 +1,34 @@
+# =============================================================================
+# LÍNEA CRÍTICA: secrets.ini nunca se commitea.
+# Contiene el SSID y la contraseña del WiFi y el access token del dispositivo
+# de ThingsBoard. Git guarda para siempre todo lo que entra al historial:
+# borrarlo en el commit siguiente NO lo saca del repositorio, y si el repo es
+# público el token ya está expuesto. Si se te escapó, rotá el token en
+# ThingsBoard (ver README.md, sección "Secretos").
+# =============================================================================
+secrets.ini
+
+# --- PlatformIO ---------------------------------------------------------------
+# Carpeta de build y dependencias descargadas. Pesa cientos de MB y se
+# regenera sola con `pio run`.
+.pio/
+
+# --- Sitio de documentación ---------------------------------------------------
+# Salida de `mkdocs build`. La publica GitHub Actions, no se versiona.
+site/
+
+# --- Python -------------------------------------------------------------------
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- Editor -------------------------------------------------------------------
+# Se ignora .vscode/ entero salvo extensions.json, que sí conviene compartir:
+# es el que le sugiere a un compañero instalar la extensión de PlatformIO.
+.vscode/*
+!.vscode/extensions.json
+
+# --- Sistema operativo --------------------------------------------------------
+.DS_Store
+Thumbs.db

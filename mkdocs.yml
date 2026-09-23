@@ -1,0 +1,108 @@
+# =============================================================================
+# Configuración del sitio de documentación (MkDocs + tema Material).
+#
+# ►►► LAS DOS LÍNEAS QUE TIENE QUE CAMBIAR CADA EQUIPO SON site_name Y
+#     site_url, acá abajo. Todo lo demás funciona como está. ◄◄◄
+#
+# Previsualizar:  mkdocs serve
+# Construir:      mkdocs build --strict
+# =============================================================================
+
+# CAMBIAR (1 de 2): el nombre del proyecto, que aparece arriba a la izquierda
+# en todas las páginas y en la pestaña del navegador.
+site_name: "Proyecto Integrador 2 — TODO nombre del proyecto"
+
+# CAMBIAR (2 de 2): la URL pública del sitio, con la barra final.
+# Se arma así:  https://<organización o usuario>.github.io/<repositorio>/
+# Está en Settings → Pages de tu repositorio, una vez publicado.
+site_url: https://TODO-ORGANIZACION.github.io/TODO-REPOSITORIO/
+
+# Opcional: descripción corta, la usan los buscadores.
+site_description: Documentación del proyecto de IoT
+
+theme:
+  name: material
+  language: es
+  features:
+    # Índice de la página a la derecha, siempre visible.
+    - toc.follow
+    # La navegación de la izquierda no colapsa al cambiar de página.
+    - navigation.top
+    # Botón de copiar en cada bloque de código.
+    - content.code.copy
+  palette:
+    # Dos esquemas, con un botón para alternar claro/oscuro.
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Cambiar a modo oscuro
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Cambiar a modo claro
+
+# -----------------------------------------------------------------------------
+# Navegación EXPLÍCITA.
+#
+# Cada página del menú está listada acá, a mano. No hay navegación por
+# convención de nombres: si creás una página nueva y no la agregás a esta
+# lista, no aparece en el menú.
+#
+# Es más trabajo, y es a propósito. La navegación automática por nombres de
+# archivo fue la causa de que en 2024 se publicara una pestaña "Prueba" en
+# todos los sitios: alguien dejó un archivo suelto y apareció en el menú de
+# todos los equipos.
+#
+# Las secciones de contenido son Inicio, Plan, Arquitectura, Decisiones,
+# Pruebas y Bitácora. La Guía es material de consulta, no una entrega.
+# -----------------------------------------------------------------------------
+nav:
+  - Inicio: index.md
+  - Plan: plan.md
+  - Arquitectura: arquitectura.md
+  - Decisiones: decisiones.md
+  - Pruebas: pruebas.md
+  - Bitácora:
+      - Cómo se lleva: bitacora/index.md
+      - Plantilla de entrada: bitacora/plantilla.md
+  - Guía del proyecto: GUIA.md
+
+markdown_extensions:
+  # Bloques de aviso: !!! note, !!! warning, !!! tip
+  - admonition
+
+  # Bloques plegables: ??? note "Título"
+  - pymdownx.details
+
+  # Tablas de Markdown.
+  - tables
+
+  # Índice con enlace permanente en cada encabezado (el ¶ al pasar el mouse).
+  - toc:
+      permalink: true
+
+  # Bloques de código anidados y, sobre todo, DIAGRAMAS MERMAID.
+  #
+  # El bloque custom_fences es lo que hace que un bloque ```mermaid se dibuje
+  # como diagrama en vez de mostrarse como texto. Se usa en arquitectura.md
+  # para el diagrama de bloques y para el Gantt del cronograma.
+  #
+  # Ojo con cómo funciona: el diagrama NO se dibuja al construir el sitio. El
+  # HTML generado solo contiene el texto del diagrama; el dibujo lo hace el
+  # navegador de quien visita la página, con una librería que el tema Material
+  # descarga de un CDN (unpkg.com) en ese momento.
+  #
+  # Consecuencia práctica: sin conexión a internet, los diagramas aparecen como
+  # texto plano. Si estás previsualizando con `mkdocs serve` en una red sin
+  # salida, no es un error tuyo ni de este archivo.
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+# Nota sobre el modo estricto: la integración continua construye con
+# `mkdocs build --strict`, que convierte cualquier advertencia (un enlace
+# roto, una página que no está en el nav) en un error y corta la publicación.
+# No se activa acá a propósito, para que `mkdocs serve` no te corte la
+# previsualización mientras estás escribiendo a medias.

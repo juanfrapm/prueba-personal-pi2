@@ -1,0 +1,108 @@
+# =============================================================================
+# Construcción y publicación del sitio de documentación en GitHub Pages.
+#
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ TODO (una sola vez, por repositorio): habilitar Pages en modo Actions.  │
+# │                                                                         │
+# │ Settings → Pages → Build and deployment → Source: "GitHub Actions"      │
+# │                                                                         │
+# │ Sin ese cambio este workflow corre EN VERDE y no publica nada, o falla  │
+# │ en el paso de deploy con un error de permisos que no explica la causa.  │
+# │ Ningún workflow puede hacer ese cambio por sí mismo: es un clic en la   │
+# │ configuración del repositorio.                                          │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# No hay rama gh-pages ni HTML generado dentro del repositorio. El sitio se
+# construye acá y se publica como artefacto. Lo generado no se commitea.
+# =============================================================================
+
+name: Publicar sitio
+
+on:
+  # Solo desde la rama principal: si publicara desde cualquier rama, cada
+  # push a una rama de trabajo pisaría el sitio publicado.
+  push:
+    branches:
+      - main
+  # Permite lanzarlo a mano desde la pestaña Actions, sin tener que pushear.
+  workflow_dispatch:
+
+# Permisos mínimos necesarios para publicar en Pages:
+#   contents: read   -> leer el repositorio
+#   pages: write     -> publicar el sitio
+#   id-token: write  -> obtener el token OIDC con el que deploy-pages se
+#                       autentica contra GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Una sola publicación a la vez. cancel-in-progress en false a propósito: si
+# hay una publicación a mitad de camino, se la deja terminar en vez de cortarla
+# y arriesgar un sitio a medio subir.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Construir el sitio con MkDocs.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Construir el sitio
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v7
+
+      - name: Preparar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Cachear pip
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Instalar dependencias del sitio
+        run: pip install -r requirements.txt
+
+      # --strict convierte cualquier advertencia en error: un enlace roto o
+      # una página que no está en el nav cortan la publicación en vez de
+      # publicar un sitio con enlaces muertos.
+      - name: Construir el sitio en modo estricto
+        run: mkdocs build --strict
+
+      - name: Configurar Pages
+        uses: actions/configure-pages@v6
+
+      # path apunta a "site", que es el directorio de salida por defecto de
+      # MkDocs (site_dir). Si alguna vez cambian site_dir en mkdocs.yml, hay
+      # que cambiar esta línea también.
+      - name: Subir el sitio como artefacto
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  # ---------------------------------------------------------------------------
+  # Publicar el artefacto. Job separado porque es el único que necesita el
+  # entorno github-pages y los permisos de escritura.
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Publicar
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
