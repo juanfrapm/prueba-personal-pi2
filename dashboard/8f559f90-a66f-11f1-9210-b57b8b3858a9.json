@@ -779,6 +779,38 @@
           "row" : 0,
           "col" : 0,
           "id" : "68ae61f3-bbd9-7ad8-68b6-8546d0b6ba6e"
+        },
+        "4c55fd85-530f-e954-dd90-45d36090a352" : {
+          "typeFullFqn" : "system.html_container",
+          "type" : "static",
+          "sizeX" : 9.5,
+          "sizeY" : 5.5,
+          "config" : {
+            "datasources" : [ ],
+            "showTitle" : false,
+            "backgroundColor" : "rgba(255, 255, 255, 0)",
+            "color" : "rgba(0, 0, 0, 0.87)",
+            "padding" : "0",
+            "settings" : {
+              "type" : "PLAIN",
+              "html" : "<div style=\"padding: 16px;\">\r\n  <mat-form-field appearance=\"outline\" style=\"width: 100%;\">\r\n    <mat-label>Mensaje</mat-label>\r\n    <input matInput [(ngModel)]=\"texto\"\r\n           placeholder=\"Escribe un mensaje\">\r\n  </mat-form-field>\r\n\r\n  <button mat-raised-button color=\"primary\"\r\n          (click)=\"enviar()\"\r\n          [disabled]=\"enviando || !texto || !texto.trim()\">\r\n    Enviar\r\n  </button>\r\n\r\n  <p>{{estado}}</p>\r\n</div>",
+              "css" : "",
+              "js" : "// ID del dispositivo en ThingsBoard, NO su access token.\r\nconst deviceId = \"PEGA_AQUI_EL_ID_DEL_DISPOSITIVO\";\r\n\r\nthis.texto = \"\";\r\nthis.estado = \"\";\r\nthis.enviando = false;\r\n\r\nthis.enviar = () => {\r\n    if (this.enviando || !this.texto.trim()) return;\r\n\r\n    this.enviando = true;\r\n    this.estado = \"Enviando...\";\r\n    ctx.detectChanges();\r\n\r\n    ctx.http.post(\"/api/rpc/oneway/\" + deviceId, {\r\n        method: \"mostrarTexto\",\r\n        params: {\r\n            texto: this.texto\r\n        },\r\n        timeout: 5000\r\n    }).subscribe({\r\n        next: () => {\r\n            this.estado = \"Enviado; sin confirmación del dispositivo.\";\r\n            ctx.detectChanges();\r\n        },\r\n        error: (err) => {\r\n            this.enviando = false;\r\n            this.estado = \"Error: \" +\r\n                (err.error?.message || err.message || \"No se pudo enviar.\");\r\n            ctx.detectChanges();\r\n        },\r\n        complete: () => {\r\n            this.enviando = false;\r\n            ctx.detectChanges();\r\n        }\r\n    });\r\n};",
+              "resources" : [ ]
+            },
+            "title" : "HTML Container",
+            "dropShadow" : false,
+            "enableFullscreen" : false,
+            "widgetStyle" : { },
+            "widgetCss" : "",
+            "pageSize" : 1024,
+            "noDataDisplayMessage" : "",
+            "configMode" : "basic",
+            "actions" : { }
+          },
+          "row" : 0,
+          "col" : 0,
+          "id" : "4c55fd85-530f-e954-dd90-45d36090a352"
         }
       },
       "states" : {
@@ -805,6 +837,12 @@
                   "sizeX" : 20,
                   "sizeY" : 11,
                   "row" : 9,
+                  "col" : 0
+                },
+                "4c55fd85-530f-e954-dd90-45d36090a352" : {
+                  "sizeX" : 9,
+                  "sizeY" : 5,
+                  "row" : 20,
                   "col" : 0
                 }
               },
@@ -849,5 +887,6 @@
   "relations" : [ ],
   "attributes" : {
     "SERVER_SCOPE" : [ ]
-  }
+  },
+  "calculatedFields" : [ ]
 }
